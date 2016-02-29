@@ -10,6 +10,7 @@ var url = 'https://www.googleapis.com/youtube/v3/';
 var async = require('async');
 var ejs = require('ejs');
 var fs = require('fs');
+var moment  = require('moment');
 
 module.exports = {
 
@@ -24,6 +25,12 @@ module.exports = {
 
 		if (params.searchKey != undefined) {
 			searchUrl += '&q=' + params.searchKey;
+		}
+
+		if (params.startDate != undefined && params.startDate.trim() != '') {
+		
+			var date = params.startDate + 'T00:00:00Z';
+			searchUrl += '&publishedAfter=' + date;
 		}
 		var result = [];
 

@@ -78,7 +78,7 @@
 
         getVideos(url);
         
-        $('.start-date-group').datetimepicker({ format : "YYYY/MM/DD"});
+        $('.start-date-group').datetimepicker({format: 'YYYY-MM-DD'});
 
         $("#search-button").click(function() {
             
@@ -91,7 +91,8 @@
                 url: url,
                 type: 'GET',
                 data: {
-                    searchKey: searchKey
+                    searchKey: searchKey,
+                    startDate : $("#start_date").val()
                 },
                 beforeSend: function() {
                     $(".video-panel").addClass("ajax-load");
