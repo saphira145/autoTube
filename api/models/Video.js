@@ -6,29 +6,98 @@
 */
 
 var Q = require('q');
+var url = 'https://www.googleapis.com/youtube/v3/';
+var apiKey = 'AIzaSyBWYb1hZluSQ6oBq1XSigNASqYMOC1KAHg';
+
 module.exports = {
 
 	attributes: {
 
-		search: function(req, res) {
-		
-			var searchUrl = url + 'search?part=snippet&maxResults=50&order=viewCount&type=video&videoDuration=short&fields=items&key=' + apiKey;
-			
-			Youtube.search(searchUrl, function(err, result) {
-				if (err) console.log(err);
+	},
 
+	search: function(searchUrl) {
 			
-				var videoIds = [];
-				var items = result.items;
+		var Promise = Q.promise( function(resolve, reject) {
+			Youtube.request(searchUrl, function(err, data) {
+				if (err) reject(err);
+
+				var result = {};
+				var collection = [];
+				var items = data.items;
+				var nextPage = data.nextPageToken;
+				var prevPage = data.prevPageToken;
 
 				for (var index in items) {
-					videoIds.push(items[index].id.videoId);
+					collection.push({videoId: items[index].id.videoId, channelId : items[index].snippet.channelId});
 				}
+
+				result.collection = collection;
+				result.nextPage = nextPage;
+				result.prevPage = prevPage;
 				
-				res.json({status: 1, videoIds: videoIds});
+				resolve(result);
 			});
+		});
+
+		return Promise;
+	},
+
+	getViewCount: function(url) {
+		var Promise = Q.promise( function (resolve, reject) {
+			Youtube.request(url, function (err, result) {
+				if (err) reject(err);
+				
+				resolve(result.items[0].statistics.viewCount);
+			})
+		})
+
+		return Promise;
+	},
+
+	getSubscriberCount: function(url) {
+		var Promise = Q.promise( function (resolve, reject) {
+			Youtube.request(url, function (err, result) {
+				if (err) reject(err);
 			
-		}
+				resolve(result.items[0].statistics.subscriberCount);
+			})
+		})
+
+		return Promise;
+	},
+
+	addInformation: function(result) {
+		var Promise = Q.promise( function (resolve, reject) {
+			async.each(result, function (item, callback) {
+				var getViewUrl = url + 'videos?part=statistics&id=' + item.videoId + '&fields=items&key=' + apiKey;
+				var getSubscriberUrl = url + 'channels?part=statistics&id=' + item.channelId + '&fields=items&key=' + apiKey;
+
+				Q.all([
+					Video.getViewCount(getViewUrl),
+					Video.getSubscriberCount(getSubscriberUrl)		
+				]) 
+				.spread(function(view, subscriber) {
+					item.viewCount = view;
+					item.subscriberCount = subscriber;
+
+					callback();
+				})
+				.catch(function (err) {
+					callback(err);
+				});
+
+			}, function (err) {
+
+				if (err) {
+					reject(err);
+				}
+				// console.log(result)
+				resolve(result);
+			});	
+		})
+
+		return Promise;
+		
 	}
 };
 

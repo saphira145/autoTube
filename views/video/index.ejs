@@ -1,0 +1,133 @@
+<div class="container">
+	<div class="panel panel-primary video-panel">
+		<!-- Default panel contents -->
+		<div class="panel-heading">Panel heading</div>
+		<div class="panel-body">
+
+                <div class="col-xs-12">
+                    <div class="row">
+                        <div class='input-group date start-date-group col-xs-12' id='start-date-group' style="margin-bottom:30px">
+                            <input type='text' class="form-control required" id="start_date" name="start_date" placeholder="DD/MM/YYYY"/>
+                            <span class="input-group-addon"><span class="glyphicon glyphicon-calendar"></span></span>
+                        </div>
+                    
+
+                        <div class="input-group col-xs-12" style="margin-bottom:30px">
+                            <input type="text" class="form-control " id="search-key" placeholder="Search for...">
+                            <span class="input-group-btn"> 
+                                <button class="btn btn-primary" id="search-button"  type="button"><i class="fa fa-search"></i></button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div>
+                </div>
+
+			<!-- Table -->
+            <table class="table">
+                <thead>
+                  <tr>
+                    <th>Video Id</th>
+                    <th>View count</th>
+                    <th>Subscriber count</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody class="video-table-body">
+                    
+                </tbody>
+            </table>
+            <nav>
+              <ul class="pager">
+                <li action="prev"><a href="javascript:void(0)">Previous</a></li>
+
+                <li action="next"><a href="javascript:void(0)">Next</a></li>
+              </ul>
+            </nav>
+		</div>
+		
+	</div>	
+</div>
+
+<script type="x-tmpl-mustache" id="row-template">
+    {{#videos}}
+        <tr>
+            <td>{{videoId}}</th>
+            <td>{{viewCount}}</th>
+            <td>{{subscriberCount}}</th>
+            <td>
+                <a href="javascript:void(0)" class="video-link" data-video-id="y-{{videoId}}"><i class="fa fa-eye" data-toggle="modal" data-target="#youtube-popup"></i> View</a>
+
+                <a href="javascript:void(0)"><i class="fa fa-upload"></i> Upload</a>
+            </td>
+        </tr>
+    {{/videos}}
+</script>
+
+<%- partial('viewModal') %>
+
+
+
+
+<script type="text/javascript">
+
+    $(function() {
+
+        var url = '/getVideos';
+        var nextPage;
+        var prevPage;
+        var searchKey;
+
+        getVideos(url);
+        
+        $('.start-date-group').datetimepicker({ format : "YYYY/MM/DD"});
+
+        $("#search-button").click(function() {
+            
+            searchKey = $("#search-key").val();
+            getVideos(url);
+        });
+
+        function getVideos(url) {
+            $.ajax({
+                url: url,
+                type: 'GET',
+                data: {
+                    searchKey: searchKey
+                },
+                beforeSend: function() {
+                    $(".video-panel").addClass("ajax-load");
+                },
+                success: function(res) {
+                    if (res.status === 1) {
+                        var html = $("#row-template").html();
+                        var template = Mustache.render(html, {videos: res.data});
+                        $(".video-table-body").empty().html(template);
+
+                        nextPage = res.nextPage;
+                        if (res.hasOwnProperty('prevPage')) {
+                            prevPage = res.prevPage;
+                        }
+
+                        videoLightning({settings: {autoplay: true, color: "white"}, element: ".video-link"});
+                    }
+                },
+                complete: function() {
+                    $(".video-panel").removeClass("ajax-load");
+                }
+
+            })    
+        }
+
+        $(".pager").find('li').click(function() {
+            switch($(this).attr('action')) {
+                case 'next':
+                    getVideos('/getVideos?pageToken=' + nextPage)
+                    break;
+
+                case 'prev':
+                    getVideos('/getVideos?pageToken=' + prevPage)
+                    break;
+            }
+        });
+        
+    })
+</script>
