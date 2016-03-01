@@ -1,7 +1,7 @@
 <div class="container">
 	<div class="panel panel-primary video-panel">
 		<!-- Default panel contents -->
-		<div class="panel-heading">Panel heading</div>
+		<div class="panel-heading">List Video</div>
 		<div class="panel-body">
 
                 <div class="col-xs-12">
@@ -25,9 +25,10 @@
             <table class="table">
                 <thead>
                   <tr>
-                    <th>Video Id</th>
+                    <th>Thumbnail</th>
                     <th>View count</th>
                     <th>Subscriber count</th>
+                    <th>Published Date</th>
                     <th>Action</th>
                   </tr>
                 </thead>
@@ -50,9 +51,14 @@
 <script type="x-tmpl-mustache" id="row-template">
     {{#videos}}
         <tr>
-            <td>{{videoId}}</th>
-            <td>{{viewCount}}</th>
-            <td>{{subscriberCount}}</th>
+            <td>
+                <a href="javascript:void(0)" class="video-link" data-video-id="y-{{videoId}}">
+                    <div class="image-preview" style="background-image: url({{thumbnail}})"></div>
+                </a>
+            </th>
+            <td class="view-count">{{viewCount}}</th>
+            <td class="subscriber-count">{{subscriberCount}}</th>
+            <td>{{published_at}}</td>
             <td>
                 <a href="javascript:void(0)" class="video-link" data-video-id="y-{{videoId}}"><i class="fa fa-eye" data-toggle="modal" data-target="#youtube-popup"></i> View</a>
 
@@ -78,7 +84,7 @@
 
         getVideos(url);
         
-        $('.start-date-group').datetimepicker({format: 'YYYY-MM-DD'});
+        $('.start-date-group').datetimepicker({format: 'YYYY-MM-DD', 'allowInputToggle': true});
 
         $("#search-button").click(function() {
             
@@ -102,6 +108,8 @@
                         var html = $("#row-template").html();
                         var template = Mustache.render(html, {videos: res.data});
                         $(".video-table-body").empty().html(template);
+
+                        highlight($(".video-table-body"));
 
                         nextPage = res.nextPage;
                         if (res.hasOwnProperty('prevPage')) {
@@ -129,6 +137,23 @@
                     break;
             }
         });
+
+        function highlight(table) {
+            table.find('tr').each(function() {
+                var viewCount = $(this).find(".view-count").text();
+                var subscriberCount = $(this).find(".subscriber-count").text();
+
+                if (viewCount >= 10000 && subscriberCount < 500) {
+                    $(this).addClass('green-highlight');
+                    return false;
+                }
+
+                if (subscriberCount < 200) {
+                    $(this).addClass('blue-highlight');
+                    return false;
+                }
+            });
+        }        
         
     })
 </script>

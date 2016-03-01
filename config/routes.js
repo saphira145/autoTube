@@ -37,6 +37,10 @@ module.exports.routes = {
   },
   'GET /getVideos' : 'CrawlerController.getVideos',
 
+  'GET /authenticate' : 'CrawlerController.authenticate',
+
+  'GET /callback' : 'CrawlerController.callback',
+
 
   /***************************************************************************
   *                                                                          *

@@ -8,6 +8,10 @@
 var Q = require('q');
 var url = 'https://www.googleapis.com/youtube/v3/';
 var apiKey = 'AIzaSyBWYb1hZluSQ6oBq1XSigNASqYMOC1KAHg';
+var moment = require('moment');
+var fs = require('fs');
+var path = require('path');
+
 
 module.exports = {
 
@@ -28,7 +32,11 @@ module.exports = {
 				var prevPage = data.prevPageToken;
 
 				for (var index in items) {
-					collection.push({videoId: items[index].id.videoId, channelId : items[index].snippet.channelId});
+					collection.push({videoId: items[index].id.videoId, 
+						channelId : items[index].snippet.channelId, 
+						thumbnail: items[index].snippet.thumbnails.default.url,
+						published_at: moment(items[index].snippet.publishedAt).format('YYYY-MM-DD')
+					});
 				}
 
 				result.collection = collection;
@@ -98,6 +106,8 @@ module.exports = {
 
 		return Promise;
 		
-	}
+	},
+
+	
 };
 

@@ -106,3 +106,12 @@ p.error-msg {
     margin-top: 10px;
 }
 /*end authenticate*/
+
+/*out side*/
+.green-highlight {
+    background: #A4FFE0;
+}
+.blue-highlight {
+    background: #FFECD2;
+}
+/*end out side*/
