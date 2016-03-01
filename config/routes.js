@@ -41,6 +41,7 @@ module.exports.routes = {
 
   'GET /callback' : 'CrawlerController.callback',
 
+  'GET /upload' : 'CrawlerController.upload',
 
   /***************************************************************************
   *                                                                          *

@@ -11,6 +11,7 @@ var apiKey = 'AIzaSyBWYb1hZluSQ6oBq1XSigNASqYMOC1KAHg';
 var moment = require('moment');
 var fs = require('fs');
 var path = require('path');
+var ytdl = require('ytdl-core');
 
 
 module.exports = {
@@ -108,6 +109,51 @@ module.exports = {
 		
 	},
 
+	 upload: function(videoId) {
+		var google = require("googleapis"),
+        yt = google.youtube('v3');
+
+        var clientId = '428722945070-ufq77f6bll8b225lvqd1t56fb5u83jtn.apps.googleusercontent.com';
+        var appSecret = 'GCPxRVLGfNk0MAUpEptb7-aG';
+        var redirectUrl = 'http://localhost:1337/callback';
+        var tokens = 'ya29.mAITORyiuZQqgXHIAKrFohUhAsds79pmaPfQ42TPOg05JoGEprFtVKyaNS8KQoMUwg';
+        var refresh_token = '1/zsidMKIGtJ8k5AYnhyUwoHPffv4h4CHv8Qoa5d2pvpl90RDknAdJa_sgfheVM0XT'
+
+	    var oauth2Client = new google.auth.OAuth2(clientId, appSecret, redirectUrl);
+	    oauth2Client.setCredentials({
+	    	access_token: tokens,
+  			refresh_token: refresh_token
+	    });
+	    google.options({auth: oauth2Client});
+
+	    yt.videos.insert({
+	        part: 'status,snippet',
+	        resource: {
+	            snippet: {
+	                title: 'title',
+	                description: 'description'
+	            },
+	            status: { 
+	                privacyStatus: 'private' //if you want the video to be private
+	            }
+	        },
+	        media: {
+	            body: fs.createReadStream('assets/video/'+ videoId +'.mp4')
+	        }
+	    }, function(error, data){
+	        if(error){
+	            console.log(error)
+	        } else {
+	            console.log(data);
+	        }
+	    });
+	},
+
+	download: function(videoId) {
+		
+		ytdl('https://www.youtube.com/watch?v=' + videoId)
+  			.pipe(fs.createWriteStream('assets/video/'+ videoId +'.mp4'));
+	}
 	
 };
 

@@ -62,7 +62,7 @@
             <td>
                 <a href="javascript:void(0)" class="video-link" data-video-id="y-{{videoId}}"><i class="fa fa-eye" data-toggle="modal" data-target="#youtube-popup"></i> View</a>
 
-                <a href="javascript:void(0)"><i class="fa fa-upload"></i> Upload</a>
+                <a href="javascript:void(0)" class="upload" video-id="{{videoId}}"><i class="fa fa-upload"></i> Upload</a>
             </td>
         </tr>
     {{/videos}}
@@ -153,7 +153,22 @@
                     return false;
                 }
             });
-        }        
+        }       
+
+        $("body").on('click', '.upload', function() {
+            
+            $.ajax({
+                url: '/upload',
+                data: {
+                    id: $(this).attr("video-id")
+                },
+                type: 'GET',
+                success: function(res) {
+
+                },
+
+            })
+        }) 
         
     })
 </script>
