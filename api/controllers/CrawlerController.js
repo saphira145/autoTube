@@ -4,54 +4,68 @@
  * @description :: Server-side logic for managing crawlers
  * @help        :: See http://sailsjs.org/#!/documentation/concepts/Controllers
  */
+var config = sails.config.mainConfig;
 
-var apiKey = 'AIzaSyBWYb1hZluSQ6oBq1XSigNASqYMOC1KAHg';
 var url = 'https://www.googleapis.com/youtube/v3/';
 var async = require('async');
-var ejs = require('ejs');
+
 var fs = require('fs');
 var moment  = require('moment');
-var request = require('request');
-
-var path = require('path');
-var querystring = require('querystring');
 var ytdl = require('ytdl-core');
+var token;
+var querystring = require('querystring');
+var request = require('request')
 
 module.exports = {
 
 	getVideos: function(req, res) {
 		var params = req.params.all();
-
-		var searchUrl = url + 'search?part=snippet&maxResults=10&order=viewCount&type=video&videoDuration=short&key=' + apiKey;
+		var getParam = {
+			part: 'snippet', 
+			maxResults: 10, 
+			order: 'viewCount', 
+			type: 'video', 
+			videoDuration: 'short',
+			key: config.api_key
+		};
 
 		if (params.pageToken != undefined) {
-			searchUrl += '&pageToken=' + params.pageToken;
+			getParam.pageToken = params.pageToken;
 		}
 
 		if (params.searchKey != undefined) {
-			searchUrl += '&q=' + params.searchKey;
+			getParam.searchKey = params.searchKey;
 		}
 
 		if (params.startDate != undefined && params.startDate.trim() != '') {
-		
 			var date = params.startDate + 'T00:00:00Z';
-			searchUrl += '&publishedAfter=' + date;
+			getParam.publishedAfter = date;
 		}
-		var result = [];
 
-		Video.search(searchUrl)
-			.then(function (data) {
-				result = data;
+		Crawler.request('search', getParam)
+			.then(function(result) {
 
-				Video.addInformation(result.collection)
+				var items = result.items;
+				var collection = [];
+
+				for (var index in items) {
+					collection.push({
+						videoId: items[index].id.videoId, 
+						channelId : items[index].snippet.channelId, 
+						thumbnail: items[index].snippet.thumbnails.default.url,
+						published_at: moment(items[index].snippet.publishedAt).format('YYYY-MM-DD')
+					});
+				}
+
+				Video.addInformation(collection)
 					.then(function (collection) {
 						
-						return res.json({status: 1, data: collection, nextPage: result.nextPage, prevPage: result.prevPage});
+						return res.json({status: 1, data: collection, nextPage: result.nextPageToken, prevPage: result.prevPageToken});
 					})
 					.catch (function (err) {
 						console.log(err)
 						return res.json({status: 0, message: 'Server error'});
-					})
+					})				
 			})
 			.catch(function (err) {
 				console.log(err);
@@ -63,36 +77,37 @@ module.exports = {
 		var params = req.params.all();
 		var videoId = params.id;
 
-		var fs = require('fs');
-		var youtubedl = require('youtube-dl');
+		var stream = Video.download(videoId);
 
-		var output = videoId + '.mp4';
+		Video.getVideoInfo(videoId)
+			.then(function(info) {
+				
+				stream.on('close', function() {
+					Video.upload(videoId, info, function(err, data) {
+						if (err) {
+							return res.json({status: 0, message: 'Cannot upload'});
+						}
 
-		var downloaded = 0;
-		if (fs.existsSync(output)) {
-	  		downloaded = fs.statSync(output).size;
-		}
-
-		var video = youtubedl('http://www.youtube.com/watch?v='+ videoId,
-		  // Optional arguments passed to youtube-dl.
-		  ['--format=18'],
-		  // Additional options can be given for calling `child_process.execFile()`.
-		  { start: downloaded, cwd: __dirname });
-
-		// Will be called when the download starts.
-		video.on('info', function(info) {
-		  	console.log('downloading')
-		});
-
-		video.pipe(fs.createWriteStream(videoId + '.mp4', { flags: 'a' }));
-
-		video.on('complete', function complete(info) {
-		  	console.log('filename: ' + info._filename + ' already downloaded.');
-	   		Video.upload(videoId);
-
-		});
-
+						return res.json({status: 1, message: 'Upload successfully'});
+					});
+				})
+			})
+			.catch(function (err) {
+				return res.json({status: 0, message: 'Api error'});
+			});
 	}	
+
+
+
+
+
+
+
+
+
+
+
+
 
 	// upload: function(req, res) {
 	// 	var postData = querystring.stringify({

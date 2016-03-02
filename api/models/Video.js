@@ -6,11 +6,10 @@
 */
 
 var Q = require('q');
+var config = sails.config.mainConfig;
 var url = 'https://www.googleapis.com/youtube/v3/';
-var apiKey = 'AIzaSyBWYb1hZluSQ6oBq1XSigNASqYMOC1KAHg';
 var moment = require('moment');
 var fs = require('fs');
-var path = require('path');
 var ytdl = require('ytdl-core');
 
 
@@ -20,56 +19,44 @@ module.exports = {
 
 	},
 
-	search: function(searchUrl) {
-			
-		var Promise = Q.promise( function(resolve, reject) {
-			Youtube.request(searchUrl, function(err, data) {
-				if (err) reject(err);
+	getViewCount: function(videoId) {
+		var getParams = {
+			part: 'statistics',
+			id: videoId,
+			fields: 'items',
+			key: config.api_key
+		}
 
-				var result = {};
-				var collection = [];
-				var items = data.items;
-				var nextPage = data.nextPageToken;
-				var prevPage = data.prevPageToken;
-
-				for (var index in items) {
-					collection.push({videoId: items[index].id.videoId, 
-						channelId : items[index].snippet.channelId, 
-						thumbnail: items[index].snippet.thumbnails.default.url,
-						published_at: moment(items[index].snippet.publishedAt).format('YYYY-MM-DD')
-					});
-				}
-
-				result.collection = collection;
-				result.nextPage = nextPage;
-				result.prevPage = prevPage;
-				
-				resolve(result);
-			});
-		});
-
-		return Promise;
-	},
-
-	getViewCount: function(url) {
 		var Promise = Q.promise( function (resolve, reject) {
-			Youtube.request(url, function (err, result) {
-				if (err) reject(err);
-				
-				resolve(result.items[0].statistics.viewCount);
-			})
+			Crawler.request('videos', getParams)
+				.then(function(result) {
+					resolve(result.items[0].statistics.viewCount);
+				})
+				.catch(function (err) {
+					reject(err);
+				})
 		})
 
 		return Promise;
 	},
 
-	getSubscriberCount: function(url) {
+	getSubscriberCount: function(channelId) {
+		var getParams = {
+			part: 'statistics',
+			id: channelId,
+			fields: 'items',
+			key: config.api_key
+		}
+
 		var Promise = Q.promise( function (resolve, reject) {
-			Youtube.request(url, function (err, result) {
-				if (err) reject(err);
-			
-				resolve(result.items[0].statistics.subscriberCount);
-			})
+			Crawler.request('channels', getParams)
+				.then(function(result) {
+
+					resolve(result.items[0].statistics.subscriberCount);
+				})
+				.catch(function (err) {
+					reject(err);
+				})
 		})
 
 		return Promise;
@@ -78,12 +65,10 @@ module.exports = {
 	addInformation: function(result) {
 		var Promise = Q.promise( function (resolve, reject) {
 			async.each(result, function (item, callback) {
-				var getViewUrl = url + 'videos?part=statistics&id=' + item.videoId + '&fields=items&key=' + apiKey;
-				var getSubscriberUrl = url + 'channels?part=statistics&id=' + item.channelId + '&fields=items&key=' + apiKey;
 
 				Q.all([
-					Video.getViewCount(getViewUrl),
-					Video.getSubscriberCount(getSubscriberUrl)		
+					Video.getViewCount(item.videoId),
+					Video.getSubscriberCount(item.channelId)		
 				]) 
 				.spread(function(view, subscriber) {
 					item.viewCount = view;
@@ -109,50 +94,74 @@ module.exports = {
 		
 	},
 
-	 upload: function(videoId) {
-		var google = require("googleapis"),
-        yt = google.youtube('v3');
+	 upload: function(videoId, info, callback) {
+	 	
+		var google = require("googleapis");
+        var yt = google.youtube('v3');
 
-        var clientId = '428722945070-ufq77f6bll8b225lvqd1t56fb5u83jtn.apps.googleusercontent.com';
-        var appSecret = 'GCPxRVLGfNk0MAUpEptb7-aG';
-        var redirectUrl = 'http://localhost:1337/callback';
-        var tokens = 'ya29.mAITORyiuZQqgXHIAKrFohUhAsds79pmaPfQ42TPOg05JoGEprFtVKyaNS8KQoMUwg';
-        var refresh_token = '1/zsidMKIGtJ8k5AYnhyUwoHPffv4h4CHv8Qoa5d2pvpl90RDknAdJa_sgfheVM0XT'
+	    var oauth2Client = new google.auth.OAuth2(config.oath.client_id, config.oath.app_secret, config.oath.redirect_url);
 
-	    var oauth2Client = new google.auth.OAuth2(clientId, appSecret, redirectUrl);
 	    oauth2Client.setCredentials({
-	    	access_token: tokens,
-  			refresh_token: refresh_token
+	    	access_token: config.token.access_token,
+  			refresh_token: config.token.refresh_token
 	    });
+
 	    google.options({auth: oauth2Client});
 
 	    yt.videos.insert({
 	        part: 'status,snippet',
 	        resource: {
 	            snippet: {
-	                title: 'title',
-	                description: 'description'
+	                title: info.title,
+	                description: info.description
 	            },
 	            status: { 
 	                privacyStatus: 'private' //if you want the video to be private
-	            }
+	            },
+	            tags: info.tags,
+	            category: info.category
 	        },
 	        media: {
 	            body: fs.createReadStream('assets/video/'+ videoId +'.mp4')
 	        }
 	    }, function(error, data){
 	        if(error){
-	            console.log(error)
+	        	console.log(error)
+	            callback(error, null);
 	        } else {
-	            console.log(data);
+	            callback(null, data);
 	        }
 	    });
 	},
 
 	download: function(videoId) {
 		
-		ytdl('https://www.youtube.com/watch?v=' + videoId)
+		var stream = ytdl('https://www.youtube.com/watch?v=' + videoId)
   			.pipe(fs.createWriteStream('assets/video/'+ videoId +'.mp4'));
+
+		return stream;
+	},
+
+	getVideoInfo: function(id) {
+		
+		var getParams = {
+			part: 'snippet',
+			id: id,
+			fields: 'items',
+			key: config.api_key
+		};
+
+		var Promise = Q.promise( function (resolve, reject) {
+			Crawler.request('videos', getParams)
+				.then(function(result) {
+					resolve(result.items[0].snippet);
+				})
+				.catch(function (err) {
+					reject(err);
+				})
+		});
+
+		return Promise;
 	}
 	
 };
