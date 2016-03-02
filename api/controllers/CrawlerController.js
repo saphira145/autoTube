@@ -34,7 +34,7 @@ module.exports = {
 		}
 
 		if (params.searchKey != undefined) {
-			getParam.searchKey = params.searchKey;
+			getParam.q = params.searchKey;
 		}
 
 		if (params.startDate != undefined && params.startDate.trim() != '') {
