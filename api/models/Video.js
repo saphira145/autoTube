@@ -164,30 +164,47 @@ module.exports = {
 		return Promise;
 	},
 
-	editVideo: function(videoId) {
-		var ffmpeg = require('ffmpeg');
+	editVideo: function(videoId, cb) {
+		var ffmpeg = require('fluent-ffmpeg');
 		var videoPath = sails.config.appPath + '/assets/video/' + videoId + '.mp4';
-		var savePath = sails.config.appPath + '/assets/video/edited/';
+		var savePath = sails.config.appPath + '/assets/video/edited/'+ videoId + '.mp4';
 		var watermark = sails.config.appPath + '/assets/images/watermark.png';
 
 		var process = new ffmpeg(videoPath);
 
-		process.then(function(video) {
-			
-			video
-					.setVideoSize('640x?', true, true, '#fff')
-		.setAudioCodec('libfaac')
-		.setAudioChannels(2)
-		.save(savePath, function(err, file) {
-					if (err) console.log(err);
-
-					console.log('edited');
-				});
-
-
-		}, function(err) {
-			console.log(err);
-		})
+		var process = ffmpeg(videoPath)
+			// set video bitrate
+			.videoBitrate(1124)
+			// set target codec
+			// .videoCodec('divx')
+			// set aspect ratio
+			.aspect('4:3')
+			// set size in percent
+			.size('640x480')
+			.autopad()
+			// set fps
+			.fps(24)
+			// set audio bitrate
+			.audioBitrate('122k')
+			.audioFilters('volume=1.2')
+			// set audio codec
+			// .audioCodec('libmp3lame')
+			// set number of audio channels
+			// .audioChannels(2)
+			// set custom option
+			// .addOption('-vtag', 'DIVX')
+			// set output format to force
+			.format('mp4')
+			// setup event handlers
+			.on('end', function() {
+				console.log('file has been converted succesfully');
+				cb();
+			})
+			.on('error', function(err) {
+			console.log('an error happened: ' + err.message);
+			})
+			// save to file
+			.save(savePath);
 		
 
 	}
