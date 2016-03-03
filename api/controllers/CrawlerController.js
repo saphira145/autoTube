@@ -79,11 +79,15 @@ module.exports = {
 
 		var stream = Video.download(videoId);
 
+		if ( req.session.token == undefined ) {
+			return res.json({status: 0, redirect: '/authenticate'});
+		}
+
 		Video.getVideoInfo(videoId)
 			.then(function(info) {
 				
 				stream.on('close', function() {
-					Video.upload(videoId, info, function(err, data) {
+					Video.upload(videoId, info, req.session.token, function(err, data) {
 						if (err) {
 							return res.json({status: 0, message: 'Cannot upload'});
 						}
@@ -95,9 +99,50 @@ module.exports = {
 			.catch(function (err) {
 				return res.json({status: 0, message: 'Api error'});
 			});
-	}	
+	},	
 
+	authenticate: function(req, res) {
+		
+		var params = "client_id="+ config.oath.client_id +"&redirect_uri=http://localhost:1337/callback&scope=https://www.googleapis.com/auth/youtube&response_type=code&access_type=offline"
+		var url = "https://accounts.google.com/o/oauth2/auth"
 
+		return res.redirect(url + '?' + params);
+	},
+
+	callback: function(req, res) {
+
+		var params = req.params.all();
+
+		if (params.code != undefined) {
+
+			var postData = querystring.stringify({
+				code: params.code,
+				client_id: config.oath.client_id,
+				client_secret: config.oath.app_secret,
+				redirect_uri: config.oath.redirect_url,
+				grant_type: 'authorization_code'
+			});
+
+			request.post({
+				url: 'https://accounts.google.com/o/oauth2/token',
+				form: postData,
+				json: true
+			}, function(error, response, body){
+				if (body != undefined) {
+
+					fs.writeFileSync('authenticate.txt', JSON.stringify(body), 'utf8');
+					req.session.token = body;
+				}
+				
+				return res.redirect('/video');
+				
+			});
+		}
+	},
+
+	editVideo: function(req, res) {
+		Video.editVideo('pzHw2ZQNavA');
+	}
 
 
 
@@ -147,49 +192,6 @@ module.exports = {
 	// 		} 
 	// 	});
 	// },
-
-	// authenticate: function(req, res) {
-	// 	var clientId = '428722945070-ufq77f6bll8b225lvqd1t56fb5u83jtn.apps.googleusercontent.com';
-	// 	var params = "client_id="+ clientId +"&redirect_uri=http://localhost:1337/callback&scope=https://www.googleapis.com/auth/youtube&response_type=code&access_type=offline"
-		
-	// 	var url = "https://accounts.google.com/o/oauth2/auth"
-
-	// 	return res.redirect(url + '?' + params);
-	// },
-
-	// callback: function(req, res) {
-	// 	var clientId = '428722945070-ufq77f6bll8b225lvqd1t56fb5u83jtn.apps.googleusercontent.com';
-
-	// 	var params = req.params.all();
-
-	// 	if (params.code != undefined) {
-
-	// 		var postData = querystring.stringify({
-	// 			code: params.code,
-	// 			client_id: clientId,
-	// 			client_secret: 'GCPxRVLGfNk0MAUpEptb7-aG',
-	// 			redirect_uri: 'http://localhost:1337/callback',
-	// 			grant_type: 'authorization_code'
-	// 		});
-
-	// 		request.post({
-	// 			url: 'https://accounts.google.com/o/oauth2/token',
-	// 			form: postData
-	// 		}, function(error, response, body){
-	// 			var json = JSON.parse(body);
-	// 			console.log(json)
-	// 			token = json;
-				
-	// 			return res.redirect('/crawler/upload');
-				
-	// 		});
-	// 	}
-	// }
-
-
-
-	
-
 
 };
 

@@ -43,6 +43,8 @@ module.exports.routes = {
 
   'GET /upload' : 'CrawlerController.upload',
 
+  'GET /authenticate' : 'CrawlerController.authenticate',
+
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *
