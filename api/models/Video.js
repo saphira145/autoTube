@@ -94,7 +94,7 @@ module.exports = {
 		
 	},
 
-	 upload: function(videoId, info, callback) {
+	 upload: function(videoId, info, token, callback) {
 	 	
 		var google = require("googleapis");
         var yt = google.youtube('v3');
@@ -102,8 +102,8 @@ module.exports = {
 	    var oauth2Client = new google.auth.OAuth2(config.oath.client_id, config.oath.app_secret, config.oath.redirect_url);
 
 	    oauth2Client.setCredentials({
-	    	access_token: config.token.access_token,
-  			refresh_token: config.token.refresh_token
+	    	access_token: token.access_token,
+  			refresh_token: token.refresh_token
 	    });
 
 	    google.options({auth: oauth2Client});
@@ -116,7 +116,7 @@ module.exports = {
 	                description: info.description
 	            },
 	            status: { 
-	                // privacyStatus: 'private' //if you want the video to be private
+	                // privacyStatus: 'public' //if you want the video to be private
 	            },
 	            tags: info.tags,
 	            category: info.category
@@ -162,6 +162,34 @@ module.exports = {
 		});
 
 		return Promise;
+	},
+
+	editVideo: function(videoId) {
+		var ffmpeg = require('ffmpeg');
+		var videoPath = sails.config.appPath + '/assets/video/' + videoId + '.mp4';
+		var savePath = sails.config.appPath + '/assets/video/edited/';
+		var watermark = sails.config.appPath + '/assets/images/watermark.png';
+
+		var process = new ffmpeg(videoPath);
+
+		process.then(function(video) {
+			
+			video
+					.setVideoSize('640x?', true, true, '#fff')
+		.setAudioCodec('libfaac')
+		.setAudioChannels(2)
+		.save(savePath, function(err, file) {
+					if (err) console.log(err);
+
+					console.log('edited');
+				});
+
+
+		}, function(err) {
+			console.log(err);
+		})
+		
+
 	}
 	
 };

@@ -171,9 +171,23 @@
                     id: $(this).attr("video-id")
                 },
                 type: 'GET',
-                success: function(res) {
-
+                beforeSend: function() {
+                    $(this).closest('tr').addClass('ajax-load')
                 },
+                success: function(res) {
+                    if (res.status == 1) {
+                        
+                    }
+
+                    if (res.status == 0) {
+                        if (res.hasOwnProperty('redirect')) {
+                            window.location.href = res.redirect;
+                        }
+                    }
+                },
+                complete: function() {
+                    $(this).closest('tr').removeClass('ajax-load')
+                }
 
             })
         }) 

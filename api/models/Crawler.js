@@ -32,6 +32,14 @@ module.exports = {
 		})
 
 		return Promise
+	},
+
+	authenticated: function(req) {
+		if (req.session.token == undefined) {
+			return false
+		}
+		
+		return true;
 	}
 };
 
