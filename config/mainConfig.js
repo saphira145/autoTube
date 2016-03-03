@@ -10,7 +10,7 @@ module.exports.mainConfig = {
 	},
 
 	token: {
-		access_token: 'ya29.mQKuQq5oqwRl2SI6C-y9cHgS1huI4o4bCQgmEpqN2yopWWDRWtGsAEay2aj0Hmwgsg',
-		refresh_token: '1/idjZ6OvHXdPECYOn7mLT2kUry7Hw1oCqEfsxgZtJMoAMEudVrK5jSpoR30zcRFq6'
+		access_token: 'ya29.mQJU8RJPZsodCY_wytrwu-r_cegmvEdLB1RBx79V6DDe13O-fuV-izcv0ndVgMqmfw',
+		refresh_token: '1/BBP60jUXP_Q1Xw0FGGtQa5qtkeev1WiSj6jSwPMxVyEMEudVrK5jSpoR30zcRFq6'
 	}
 }

@@ -25,7 +25,7 @@ module.exports = {
 			maxResults: 10, 
 			order: 'viewCount', 
 			type: 'video', 
-			videoDuration: 'short',
+			// videoDuration: 'short',
 			key: config.api_key
 		};
 
@@ -40,6 +40,10 @@ module.exports = {
 		if (params.startDate != undefined && params.startDate.trim() != '') {
 			var date = params.startDate + 'T00:00:00Z';
 			getParam.publishedAfter = date;
+		}
+
+		if (params.videoDuration != undefined && params.videoDuration.trim() != '') {
+			getParam.videoDuration = params.videoDuration;
 		}
 
 		Crawler.request('search', getParam)
@@ -83,6 +87,7 @@ module.exports = {
 			.then(function(info) {
 				
 				stream.on('close', function() {
+					console.log('start uploading....');
 					Video.upload(videoId, info, function(err, data) {
 						if (err) {
 							return res.json({status: 0, message: 'Cannot upload'});

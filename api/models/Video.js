@@ -116,7 +116,7 @@ module.exports = {
 	                description: info.description
 	            },
 	            status: { 
-	                privacyStatus: 'private' //if you want the video to be private
+	                // privacyStatus: 'private' //if you want the video to be private
 	            },
 	            tags: info.tags,
 	            category: info.category
