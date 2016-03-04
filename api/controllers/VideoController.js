@@ -9,6 +9,10 @@ module.exports = {
 	
 	index: function(req, res) {
 		return res.view();
+	},
+
+	getDownload: function(req, res) {
+		return res.view('video/download');
 	}
 };
 

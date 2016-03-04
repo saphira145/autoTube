@@ -51,7 +51,7 @@
   </head>
 
   <body style="padding-top:100px">
-    <nav class="navbar navbar-default navbar-fixed-top">
+    <nav class="navbar navbar-default navbar-fixed-top navbar-auto">
       <div class="container-fluid">
         <div class="navbar-header">
           <a class="navbar-brand" href="#">Youtube</a>
@@ -59,6 +59,7 @@
         <ul class="nav navbar-nav">
           <li><a href="/video">Video</a></li>
           <li><a href="/add">Add List</a></li>
+          <li><a href="/download">Download</a></li>
         </ul>
 
         <ul class="nav navbar-nav navbar-right">
@@ -127,3 +128,14 @@
     
   </body>
 </html>
+
+<script type="text/javascript">
+
+$(document).ready(function () {
+    // Active main menu
+    var url = window.location;
+      $('.navbar-auto a').filter(function() {
+          return this.href == url || url.href.indexOf(this.href) == 0;
+      }).addClass('active').parent().addClass('active');
+  });
+</script>

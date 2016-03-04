@@ -1,0 +1,58 @@
+<div class="container">
+	<div class="panel panel-primary">
+	  	<div class="panel-heading">Download youtube</div>
+		  	<div class="panel-body">
+		    	<div class="input-group" style="margin-bottom:30px">
+                    <input type="text" class="form-control " id="search-key" placeholder="Insert link...">
+                    <span class="input-group-btn"> 
+                        <button class="btn btn-primary" id="upload-button"  type="button"><i class="fa fa-download"></i></button>
+                    </span>
+                </div><!-- /input-group -->
+		  	</div>
+	</div>
+
+
+</div>
+
+<script type="text/javascript">
+$(document).ready(function() {
+
+
+	$("body").on('click', '#upload-button', function() {
+
+		var video_id = $("#search-key").val().split('v=')[1];
+		var ampersandPosition = video_id.indexOf('&');
+		var self = this;
+
+		if(ampersandPosition != -1) {
+		  	video_id = video_id.substring(0, ampersandPosition);
+		}
+	            
+	    $.ajax({
+	        url: '/upload',
+	        data: {
+	            id: video_id
+	        },
+	        type: 'GET',
+	        beforeSend: function() {
+	            $(self).closest('.panel-primary').addClass('ajax-load')
+	        },
+	        success: function(res) {
+	            if (res.status == 1) {
+	                
+	            }
+
+	            if (res.status == 0) {
+	                if (res.hasOwnProperty('redirect')) {
+	                    window.location.href = res.redirect;
+	                }
+	            }
+	        },
+	        complete: function() {
+	            $(self).closest('.panel-primary').removeClass('ajax-load')
+	        }
+
+	    })
+	}) 
+})
+</script>	

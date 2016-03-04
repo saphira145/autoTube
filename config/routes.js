@@ -45,6 +45,8 @@ module.exports.routes = {
 
   'GET /authenticate' : 'CrawlerController.authenticate',
 
+  'GET /download' : 'VideoController.getDownload',
+
   /***************************************************************************
   *                                                                          *
   * Custom routes here...                                                    *

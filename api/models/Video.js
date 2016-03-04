@@ -109,7 +109,7 @@ module.exports = {
 	    google.options({auth: oauth2Client});
 
 	    console.log('start uploading...')
-	    
+
 	    yt.videos.insert({
 	        part: 'status,snippet',
 	        resource: {
@@ -124,7 +124,7 @@ module.exports = {
 	            category: info.category
 	        },
 	        media: {
-	            body: fs.createReadStream('assets/video/'+ videoId +'.mp4')
+	            body: fs.createReadStream('assets/video/edited/'+ videoId +'.flv')
 	        }
 	    }, function(error, data){
 	        if(error){
@@ -179,7 +179,7 @@ module.exports = {
 			.audioBitrate('128k')
   			.audioChannels(1)
 			.audioFrequency(44100)
-  			.size('426x240')
+  			.size('800x600')
   			.fps(30) 
   			.format('flv')
   			.audioFilters('volume=0.5')

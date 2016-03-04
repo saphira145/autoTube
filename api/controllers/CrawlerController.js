@@ -87,6 +87,7 @@ module.exports = {
 			return res.json({status: 0, redirect: '/authenticate'});
 		}
 
+		
 		Video.getVideoInfo(videoId)
 			.then(function(info) {
 				
