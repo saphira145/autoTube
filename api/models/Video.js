@@ -175,11 +175,11 @@ module.exports = {
 		process.then(function(video) {
 			
 			video
-					.setVideoSize('640x?', true, true, '#fff')
-		.setAudioCodec('libfaac')
-		.setAudioChannels(2)
-		.save(savePath, function(err, file) {
-					if (err) console.log(err);
+			.setVideoSize('640x?', true, true, '#fff')
+			.setAudioCodec('libfaac')
+			.setAudioChannels(2)
+			.save(savePath, function(err, file) {
+				if (err) console.log(err);
 
 					console.log('edited');
 				});
