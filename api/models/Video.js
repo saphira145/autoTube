@@ -108,6 +108,8 @@ module.exports = {
 
 	    google.options({auth: oauth2Client});
 
+	    console.log('start uploading...')
+	    
 	    yt.videos.insert({
 	        part: 'status,snippet',
 	        resource: {
@@ -164,33 +166,38 @@ module.exports = {
 		return Promise;
 	},
 
-	editVideo: function(videoId) {
-		var ffmpeg = require('ffmpeg');
+	editVideo: function(videoId, cb) {
+
+		var ffmpeg = require('fluent-ffmpeg');
 		var videoPath = sails.config.appPath + '/assets/video/' + videoId + '.mp4';
-		var savePath = sails.config.appPath + '/assets/video/edited/';
-		var watermark = sails.config.appPath + '/assets/images/watermark.png';
+		var savePath = sails.config.appPath + '/assets/video/edited/'+ videoId + '.flv';
+		var watermark = sails.config.appPath + '/assets/images/wm.jpg';
 
-		var process = new ffmpeg(videoPath);
-
-		process.then(function(video) {
-			
-			video
-			.setVideoSize('640x?', true, true, '#fff')
-			.setAudioCodec('libfaac')
-			.setAudioChannels(2)
-			.save(savePath, function(err, file) {
-				if (err) console.log(err);
-
-					console.log('edited');
-				});
-
-
-		}, function(err) {
-			console.log(err);
-		})
-		
-
-	}
+		var proc = ffmpeg(videoPath)
+			.videoCodec('libx264')
+			// .audioCodec('libfaac')
+			.audioBitrate('128k')
+  			.audioChannels(1)
+			.audioFrequency(44100)
+  			.size('426x240')
+  			.fps(30) 
+  			.format('flv')
+  			.audioFilters('volume=0.5')
+			.addOptions(['-g 1', '-force_key_frames 2'])
+			.on('end', function() {
+				console.log('file has been converted succesfully');
+				cb();
+			})
+			.on('error', function(err, stdout, stdrr) {
+				console.log('an error happened: ' + err.message);
+				console.log(stdrr)
+			})
+			.on('start', function() {
+				console.log('start converting...')
+			})
+			// save to file
+			.save(savePath);
+		}
 	
 };
 
